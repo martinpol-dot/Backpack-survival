@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes"><title>Backpack Survival V3</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#10140f;color:#f7ecd6;font-family:system-ui,-apple-system,sans-serif}
+.app{max-width:540px;min-height:100vh;margin:auto;padding:calc(8px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(#1b241b,#0d110d)}
+h1{font-size:21px;margin:3px 0 7px;color:#ffd66e}.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.pill{text-align:center;background:#293329;border:1px solid #647256;border-radius:10px;padding:6px 3px;font-size:12px;font-weight:800}
+.arena{position:relative;height:260px;margin-top:9px;overflow:hidden;border:2px solid #647153;border-radius:17px;background:linear-gradient(#405e70 0 47%,#6d8550 47% 54%,#4b4030 54% 100%)}
+.arena:after{content:"";position:absolute;left:0;right:0;bottom:40px;height:3px;background:#33291f;opacity:.7}.hero{position:absolute;left:14px;bottom:39px;font-size:57px;z-index:5}.hero.flash{animation:flash .18s}@keyframes flash{50%{filter:brightness(2);transform:translateX(-4px)}}
+.hpwrap{position:absolute;left:10px;bottom:18px;width:96px;height:10px;background:#551d1d;border-radius:8px;overflow:hidden;z-index:7}.hp{height:100%;background:#4fc36b;transition:.15s}
+.enemy{position:absolute;bottom:42px;width:55px;text-align:center;font-size:47px;z-index:4}.ename{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;background:#241914;padding:2px 5px;border-radius:5px;white-space:nowrap}.ebar{position:absolute;top:-7px;left:5px;width:45px;height:5px;background:#551515;border-radius:4px;overflow:hidden}.ebar i{display:block;height:100%;background:#e85b4f}
+.shot{position:absolute;font-size:23px;z-index:8}.damage{position:absolute;font-size:12px;font-weight:900;color:#fff2a5;z-index:9;animation:float .45s forwards}@keyframes float{to{transform:translateY(-24px);opacity:0}}
+.banner{position:absolute;top:8px;left:8px;right:8px;text-align:center;font-size:12px;font-weight:750;text-shadow:0 1px 3px #000;z-index:10}
+.panel{margin-top:9px;padding:10px;background:#202820;border:1px solid #596650;border-radius:15px}h2{font-size:15px;margin:0 0 8px}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.card{padding:7px 3px;text-align:center;background:#354033;border:1px solid #718164;border-radius:10px;font-size:10px}.card .ico{display:block;font-size:28px}.card button{margin-top:4px;border:0;border-radius:7px;padding:6px 8px;background:#dda13d;color:#211507;font-weight:850}.card button:disabled{opacity:.35}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.slot{aspect-ratio:1.12;background:#121812;border:1px dashed #5a6654;border-radius:9px;position:relative;display:flex;align-items:center;justify-content:center}.slot.filled{background:#344031;border-style:solid;border-color:#7c8d6b}.slot.sel{outline:3px solid #ffd05d}.slot .ico{font-size:29px}.level{position:absolute;right:3px;top:3px;font-size:9px;background:#9b5b22;padding:1px 4px;border-radius:6px}.iname{position:absolute;bottom:2px;font-size:8px}.hint{font-size:10px;color:#bbb9a8;margin-top:6px}.actions{display:flex;gap:6px;margin-top:9px}.main{flex:1;border:0;border-radius:10px;padding:12px 5px;background:#dda13d;color:#211507;font-size:14px;font-weight:900}.secondary{background:#586552;color:#fff}.disabled{opacity:.4;pointer-events:none}
+</style></head>
+<body><main class="app"><h1>⚔️ Backpack Survival</h1>
+<div class="hud"><div class="pill">🌊 <span id="wave">1</span></div><div class="pill">💀 <span id="kills">0</span></div><div class="pill">❤️ <span id="hptext">100</span></div><div class="pill">🎒 <span id="used">0</span>/12</div></div>
+<div id="arena" class="arena"><div id="banner" class="banner">Wähle ein Item.</div><div id="hero" class="hero">🧙‍♂️</div><div class="hpwrap"><div id="hp" class="hp"></div></div></div>
+<section class="panel"><h2>🎁 Beute – wähle 1 Item</h2><div id="choices" class="choices"></div></section>
+<section class="panel"><h2>🎒 Rucksack (12 Plätze)</h2><div id="grid" class="grid"></div><div class="hint">Fusionieren: Tippe auf ein Item und danach auf ein gleiches Item derselben Stufe. Fusionierte Waffen schießen stärker und schneller.</div></section>
+<div class="actions"><button id="start" class="main disabled">▶ Welle starten</button><button id="reset" class="main secondary">↻ Neustart</button></div></main>
+<script>
+const ITEMS=[{n:'Dolch',i:'🗡️',shot:'🗡️',d:8,r:720},{n:'Axt',i:'🪓',shot:'🪓',d:13,r:1100},{n:'Bogen',i:'🏹',shot:'➶',d:9,r:620},{n:'Hammer',i:'🔨',shot:'🔨',d:17,r:1350},{n:'Feuer',i:'🔥',shot:'🔥',d:12,r:850},{n:'Eis',i:'❄️',shot:'❄️',d:7,r:520}];
+const MOBS=[['Skelett','💀'],['Goblin','👺'],['Zombie','🧟'],['Ork','👹'],['Dämon','😈'],['Drache','🐲']];
+const $=id=>document.getElementById(id);let s,gameTimer,spawnTimer;
+function fresh(){clearInterval(gameTimer);clearInterval(spawnTimer);s={wave:1,kills:0,hp:100,inv:Array(12).fill(null),offer:[],picked:false,running:false,selected:null,enemies:[],shots:[],fx:[],spawned:0,total:0,last:performance.now()};makeOffers();render()}
+function makeOffers(){s.offer=Array.from({length:3},()=>({...ITEMS[Math.floor(Math.random()*ITEMS.length)],lvl:1,next:0}));s.picked=false}
+function pick(i){if(s.picked||s.running)return;let k=s.inv.findIndex(x=>x===null);if(k<0){$('banner').textContent='Rucksack voll – fusioniere zuerst Items!';return}s.inv[k]={...s.offer[i],id:Math.random(),next:0};s.picked=true;$('banner').textContent='Bereit für die nächste Welle!';render()}
+function tapSlot(i){if(s.running||!s.inv[i])return;if(s.selected===null){s.selected=i;render();return}if(s.selected===i){s.selected=null;render();return}let a=s.inv[s.selected],b=s.inv[i];if(a&&b&&a.n===b.n&&a.lvl===b.lvl){a.lvl++;a.next=0;s.inv[i]=null;s.selected=null;$('banner').textContent='✨ '+a.n+' ist jetzt Stufe '+a.lvl+'!'}else{s.selected=i;$('banner').textContent='Für Fusion: gleiches Item + gleiche Stufe.'}render()}
+function spawn(){if(!s.running||s.spawned>=s.total)return;let tier=Math.min(MOBS.length-1,Math.floor((s.wave-1)/3)),m=MOBS[tier],max=25+s.wave*11;s.enemies.push({id:Math.random(),n:m[0],i:m[1],x:500,hp:max,max,speed:.028+s.wave*.0018,atk:7+s.wave*.7});s.spawned++}
+function startWave(){if(!s.picked||s.running)return;s.running=true;s.selected=null;s.enemies=[];s.shots=[];s.fx=[];s.spawned=0;s.total=2+Math.floor(s.wave*1.25);s.last=performance.now();$('banner').textContent='Welle '+s.wave+' beginnt!';spawn();spawnTimer=setInterval(spawn,900);gameTimer=setInterval(tick,30);render()}
+function tick(){if(!s.running)return;let now=performance.now(),dt=Math.min(60,now-s.last);s.last=now;
+for(let e of s.enemies)e.x-=e.speed*dt;
+for(let e of s.enemies){if(e.x<=82&&e.hp>0){s.hp-=e.atk;e.hp=0;$('hero').classList.add('flash');setTimeout(()=>$('hero').classList.remove('flash'),180)}}
+s.enemies=s.enemies.filter(e=>e.hp>0);
+s.inv.forEach((it,idx)=>{if(!it||!s.enemies.length)return;if(now>=it.next){let target=s.enemies.reduce((a,b)=>a.x<b.x?a:b);let mult=Math.pow(1.8,it.lvl-1);s.shots.push({x:72,y:116+(idx%4)*4,target:target.id,icon:it.shot,dmg:it.d*mult,speed:.42+.04*it.lvl});it.next=now+it.r/Math.pow(1.16,it.lvl-1)}});
+for(let p of s.shots){let e=s.enemies.find(x=>x.id===p.target);if(!e){p.dead=true;continue}p.x+=p.speed*dt;if(p.x>=e.x){e.hp-=p.dmg;p.dead=true;s.fx.push({x:e.x,y:105,text:'-'+Math.round(p.dmg),born:now});if(e.hp<=0)s.kills++}}
+s.shots=s.shots.filter(p=>!p.dead);s.enemies=s.enemies.filter(e=>e.hp>0);s.fx=s.fx.filter(f=>now-f.born<450);
+if(s.hp<=0){s.hp=0;finish(false)}else if(s.spawned>=s.total&&s.enemies.length===0){finish(true)}
+render()}
+function finish(win){s.running=false;clearInterval(gameTimer);clearInterval(spawnTimer);if(win){s.wave++;s.hp=Math.min(100,s.hp+15);makeOffers();$('banner').textContent='🏆 Geschafft! Wähle neue Beute.'}else $('banner').textContent='☠️ Besiegt in Welle '+s.wave+'. Neustart?'}
+function renderArena(){document.querySelectorAll('.enemy,.shot,.damage').forEach(e=>e.remove());for(let e of s.enemies){let d=document.createElement('div');d.className='enemy';d.style.left=e.x+'px';d.innerHTML='<span class="ename">'+e.n+'</span><span class="ebar"><i style="width:'+Math.max(0,e.hp/e.max*100)+'%"></i></span>'+e.i;$('arena').appendChild(d)}for(let p of s.shots){let d=document.createElement('div');d.className='shot';d.style.left=p.x+'px';d.style.top=p.y+'px';d.textContent=p.icon;$('arena').appendChild(d)}for(let f of s.fx){let d=document.createElement('div');d.className='damage';d.style.left=f.x+'px';d.style.top=f.y+'px';d.textContent=f.text;$('arena').appendChild(d)}}
+function render(){$('wave').textContent=s.wave;$('kills').textContent=s.kills;$('hptext').textContent=Math.ceil(s.hp);$('hp').style.width=s.hp+'%';$('used').textContent=s.inv.filter(Boolean).length;
+$('choices').innerHTML=s.offer.map((x,i)=>'<div class="card"><span class="ico">'+x.i+'</span><b>'+x.n+'</b><br>⚔️ '+x.d+'<br><button '+(s.picked||s.running||s.inv.every(Boolean)?'disabled':'')+' onclick="pick('+i+')">Nehmen</button></div>').join('');
+$('grid').innerHTML=s.inv.map((x,i)=>x?'<div onclick="tapSlot('+i+')" class="slot filled '+(s.selected===i?'sel':'')+'"><span class="level">★'+x.lvl+'</span><span class="ico">'+x.i+'</span><span class="iname">'+x.n+'</span></div>':'<div class="slot"></div>').join('');
+$('start').className='main '+(!s.picked||s.running||s.hp<=0?'disabled':'');$('start').textContent=s.running?'⚔️ Kampf läuft…':'▶ Welle starten';renderArena()}
+$('start').onclick=startWave;$('reset').onclick=fresh;fresh();
+</script></body></html>
